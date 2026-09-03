@@ -1,0 +1,58 @@
+name: Release VSIX
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package VSIX
+        run: npx vsce package
+
+      - name: Derive tag/version name
+        id: meta
+        run: |
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "vsix=$(ls *.vsix | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.meta.outputs.tag }}
+          body: |
+            ## Build
+
+            Auto-built VSIX from tag `${{ steps.meta.outputs.tag }}`.
+
+            ### Install
+            Download `${{ steps.meta.outputs.vsix }}` and install via:
+            - VS Code → Extensions → ⋯ → **Install from VSIX...**, or
+            - CLI: `code --install-extension ${{ steps.meta.outputs.vsix }}`
+
+            > **Note**: this extension uses a **proposed API**
+            > (`lm.registerLanguageModelChatProvider`), so it requires
+            > **VS Code Insiders** to register its chat provider. The
+            > usage-capture proxy still works on stable builds for direct
+            > API tracking.
+          files: ./*.vsix
+          draft: false
+          prerelease: false
