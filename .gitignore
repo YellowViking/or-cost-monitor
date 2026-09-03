@@ -1,0 +1,6 @@
+node_modules/
+dist/
+dist-tsc/
+out/
+*.vsix
+.DS_Store

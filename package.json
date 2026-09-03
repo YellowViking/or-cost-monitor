@@ -1,0 +1,144 @@
+{
+  "name": "or-cost-monitor",
+  "displayName": "OpenRouter Cost Monitor",
+  "description": "Real-time OpenRouter API usage and cost monitor. Live per-prompt cost, token counts, per-session and daily spend tracking, with a webview dashboard.",
+  "version": "0.1.0",
+  "publisher": "yellowviking",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YellowViking/or-cost-monitor.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "capabilities": {
+    "proposedApi": [
+      "lm.registerLanguageModelChatProvider"
+    ],
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "or-cost-openrouter",
+        "displayName": "OpenRouter (Cost Monitor)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "or-cost.openDashboard",
+        "title": "OpenRouter: Show Dashboard"
+      },
+      {
+        "command": "or-cost.refresh",
+        "title": "OpenRouter: Refresh Now"
+      },
+      {
+        "command": "or-cost.pickApiKey",
+        "title": "OpenRouter: Set API Key"
+      },
+      {
+        "command": "or-cost.clearApiKey",
+        "title": "OpenRouter: Clear API Key"
+      },
+      {
+        "command": "or-cost.resetSession",
+        "title": "OpenRouter: Reset Session Tracking"
+      },
+      {
+        "command": "or-cost.togglePolling",
+        "title": "OpenRouter: Toggle Auto-Refresh"
+      }
+    ],
+    "configuration": {
+      "title": "OpenRouter Cost Monitor",
+      "properties": {
+        "orCost.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Your OpenRouter API key (`sk-or-v1-...`). Stored in VS Code secret storage (secure), not here. This field is a fallback/legacy plaintext option; prefer `OpenRouter Cost Monitor: Set API Key`.",
+          "scope": "machine"
+        },
+        "orCost.pollIntervalSeconds": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "maximum": 3600,
+          "description": "How often to poll OpenRouter for new usage (seconds)."
+        },
+        "orCost.syncAllTime": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fetch full generation history on first run to bootstrap daily totals. Can be slow with many requests."
+        },
+        "orCost.statusBarMode": {
+          "type": "string",
+          "enum": [
+            "cost",
+            "tokens",
+            "requests",
+            "session"
+          ],
+          "default": "cost",
+          "description": "What the status bar item shows: today's spend, today's tokens, today's requests, or current session spend."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "or-cost",
+          "title": "OpenRouter",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "or-cost": [
+        {
+          "id": "orCost.usage",
+          "name": "Usage"
+        },
+        {
+          "id": "orCost.recent",
+          "name": "Recent Requests"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "or-cost.refresh",
+          "when": "view == orCost.usage || view == orCost.recent",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm run check-types && node esbuild.js",
+    "check-types": "tsc --noEmit",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.9",
+    "esbuild": "^0.20.1",
+    "typescript": "^5.4.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3"
+  }
+}
